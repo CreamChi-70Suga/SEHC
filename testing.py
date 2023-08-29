@@ -1,0 +1,1 @@
+from common import Peoplefrom library import *def checkGender(check):    if check == 0:        print(SEX_0)    else:        print(SEX_1)class Student(People):    def __init__(self, name, age, gender, genid):        super().__init__(name, age, gender)        self.genid = genid
