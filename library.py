@@ -1,1 +1,56 @@
-#GenderSEX_0 = 'MALE'SEX_1 = 'FEMALE'
+# =============================================
+# FILE		:	library.py
+# DESC		:	Defining a Constant Value
+# AUTHOR	:	thingoc.dang
+# VER		:	230821
+# =============================================
+
+# Test result
+TEST_FAIL = False
+TEST_PASS = True
+
+# state of load
+STATE_OFF = False
+STATE_ON = True
+
+# Timer
+TIME_ONE_SEC = 1
+TIME_ONE_MIN = 60
+TIME_ONE_HOUR = 3600
+
+# Cleanliness level
+CLEANLINESS_LEVEL_1 = 1
+CLEANLINESS_LEVEL_2 = 2
+CLEANLINESS_LEVEL_3 = 3
+CLEANLINESS_LEVEL_4 = 4
+
+# PM LEVEL
+PM10_LEVEL1 = 10
+PM10_LEVEL2 = 31
+PM10_LEVEL3 = 81
+PM10_LEVEL4 = 151
+
+PM2_5_LEVEL1 = 10
+PM2_5_LEVEL2 = 16
+PM2_5_LEVEL3 = 36
+PM2_5_LEVEL4 = 76
+
+PM1_0_LEVEL1 = 10
+PM1_0_LEVEL2 = 16
+PM1_0_LEVEL3 = 36
+PM1_0_LEVEL4 = 76
+
+# GAS LEVEL
+GAS_LEVEL1 = 0
+GAS_LEVEL2 = 4
+GAS_LEVEL3 = 6
+GAS_LEVEL4 = 7
+
+# ILLUMINANCE SENSOR LEVEL
+BRIGHTNESS_LEVEL0 = 0
+BRIGHTNESS_LEVEL1 = 1
+BRIGHTNESS_LEVEL2 = 25
+
+
+
+
