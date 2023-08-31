@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 # =============================================
 # FILE		:	scc.py
 # DESC		:	단일복합명령 전송
@@ -12,32 +13,33 @@ import datetime
 import serial
 import re
 import threading
-
 from common import *
+
+# import mgmt
 
 
 class SerialComm():
     _stop_flag = False
 
     # =============================================
-    # Description	-	SerialComm class constructor
-    # Parameter		-	port : COM port
-    #					password : root/TASH password
+    # Description	-	SerialComm 클래스 생성자
+    # Parameter		-	port : COM 포트
+    #					password : root/TASH 비밀번호
     # return		-	X
     # =============================================
     def __init__(self, port, password):
         self._port = port
         self._password = password
-        self._baudrate = 0  # Need to define according to module in Child
+        self._baudrate = 0  # Child에서 모듈에 따라 정의 필요
 
     # =============================================
-    # Description	-	Create a folder to store logs
+    # Description	-	로그 저장할 폴더 생성
     # Parameter		-	X
     # return		-	X
     # =============================================
     def make_wifi_log_folder(self):
         par_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))  # ...\Director이 os.getcwd(), 그 상위에 폴더 생성
-        par_path += "/Logs/WifiLog"
+        par_path += "/06_Wifi_Log"
 
         if not os.path.exists(par_path):
             os.mkdir(par_path)
@@ -46,9 +48,9 @@ class SerialComm():
         os.mkdir(self._folder_path)
 
     # =============================================
-    # Description	-	Return after creating file name
+    # Description	-	파일명 생성 후 반환
     # Parameter		-	X
-    # return		-	name : file name
+    # return		-	name : 파일명
     # =============================================
     def _get_file_name(self):
         name = str(datetime.datetime.now())[:-7].replace(' ', '_')
@@ -57,7 +59,7 @@ class SerialComm():
         return name
 
     # =============================================
-    # Description	-	Open serial port
+    # Description	-	시리얼포트 열기
     # Parameter		-	X
     # return		-	X
     # =============================================
@@ -65,12 +67,11 @@ class SerialComm():
         try:
             self._serial = serial.Serial(port=self._port, baudrate=self._baudrate, timeout=10)
         except Exception as e:
-            print
-            e
-            Common.print_log('[open_serial_port] Failed to open serial port')
+            print(e)
+            Common.print_log('[open_serial_port] Serial port open failure')
 
     # =============================================
-    # Description	-	close serial port
+    # Description	-	시리얼포트 닫기
     # Parameter		-	X
     # return		-	X
     # =============================================
@@ -78,38 +79,65 @@ class SerialComm():
         try:
             self._serial.close()
         except Exception as e:
-            print
-            e
+            print(e)
             Common.print_log('[close_serial_port] Serial port close failure')
 
     # =============================================
-    # Description	-	Send data to serial port
-    # Parameter		-	cmd : 명령
+    # Description	-	Gửi dữ liệu tới cổng nối tiếp
+    # Parameter		-	cmd : yêu cầu
     # return		-	X
     # =============================================
     def write_serial_port(self, cmd):
         time.sleep(1)
-        Common.print_log('[write_serial_port] %s' % cmd)
+        print('[write_serial_port] %s' % cmd)
         self._serial.write((cmd + "\n").encode("utf-8"))
 
     # =============================================
-    # Description	-	Remove ANSI values from string
-    # Parameter		-	words : Data coming from the serial port
-    # return		-	refined data
+    # Description	-	문자열에서 ANSI 값 제거
+    # Parameter		-	words : 시리얼포트로부터 들어오는 데이터
+    # return		-	정제된 데이터
     # =============================================
     def _delete_ansi_code(self, words):
         ansi_escape = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
         return ansi_escape.sub("", words)
 
     # =============================================
-    # Description	-	Start saving Wifi Log
+    # Description	-	Thread 돌면서 Log Buffer에 저장
+    # Parameter		-	X
+    # return		-	X
+    # =============================================
+    def _write_log_thread(self):
+        self._buffer = ""
+        t = threading.currentThread()
+
+        start = time.time()
+
+        while True:
+            now = time.time()
+            elapsed = int(now - start)
+            if elapsed > 300:  # 비정상적인 종료로 flag 들어오지 않았을 때, 최대 300초까지만 쓰레드 돌고 정지
+                break
+
+            if t.stop == True:
+                break
+
+            try:
+                log = self._serial.readline().decode("utf-8", errors="ignore")
+                log = self._delete_ansi_code(log)
+                self._buffer += "[" + str(datetime.datetime.now()) + "]" + log
+            except:
+                pass
+
+        t.stop = True
+
+    # =============================================
+    # Description	-	Wifi Log 저장 시작
     # Parameter		-	X
     # return		-	X
     # =============================================
     def start_wifi_logging(self):
         self._serial.flushInput()
         self._serial.flushOutput()
-
         self._thread = threading.Thread(target=self._write_log_thread)
         self._thread.stop = False
         self._thread.setDaemon(True)
@@ -118,14 +146,14 @@ class SerialComm():
         self._response_cnt = 0
 
     # =============================================
-    # Description	-	Save Wifi Log Exit
+    # Description	-	Wifi Log 저장 종료
     # Parameter		-	X
     # return		-	X
     # =============================================
     def stop_wifi_logging(self):
         self._thread.stop = True
 
-        time.sleep(15)  #
+        time.sleep(15)  # Thread에서 아직 file write 하고 있을수도 있어서 딜레이 주고 파일 닫아야 함
 
         path = self._folder_path + "/TC" + "_" + self._get_file_name()
 
@@ -133,18 +161,16 @@ class SerialComm():
             p = path + ".log"
             self._file = open(p, mode="w")
         except Exception as e:
-            print
-            e
-            Common.Stop('[stop_wifi_logging] 파일 Open 실패')
+            print(e)
+            Common.Stop('[stop_wifi_logging] File open failure')
 
         self._file.write(self._buffer)
 
         try:
             self._file.close()
         except Exception as e:
-            print
-            e
-            Common.Stop('[close_wifi_log] 파일 Close 실패')
+            print(e)
+            Common.Stop('[close_wifi_log] File Close Failed')
 
         self._thread.join()
 
@@ -206,7 +232,7 @@ class TizenRT(SerialComm):
             'off': {'cluster': 'fe12', 'id': '65', 'len': '01', 'value': 'f0'}
         }
     }
-    _baudrate = 9600
+    _baudrate = 115200
 
     # =============================================
     # Description	-	TizenRT 클래스 생성자
@@ -215,6 +241,7 @@ class TizenRT(SerialComm):
     # return		-	X
     # =============================================
     def __init__(self, port, password):
+        self._com = None
         self._port = port
         self._password = password
 
@@ -225,7 +252,6 @@ class TizenRT(SerialComm):
     # =============================================
     def set_log_level(self):
         self._com.input_password()
-
         self._com.write_serial_port('scube log 1')
         self._com.write_serial_port('setlog 7 6')
 
@@ -280,10 +306,9 @@ class TizenRT(SerialComm):
 
                 return feedback
             else:
-                print
-                "[send_single_command] 단일명령 전송 실패, 재전송"
+                print("[send_single_command] Failed to send single command, resend")
 
-        Common.Stop("[send_single_command] 단일명령 전송 실패")
+        Common.Stop("[send_single_command] Single command transmission failure")
 
 
 class Tizen(SerialComm):
