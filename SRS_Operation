@@ -37,6 +37,31 @@ When the wind volume changes from a gentle wind to a Windlevel-high due to a sha
 ※ To increase user satisfaction by showing a quick response to pollution. 
 
 
+Large Platform (DOUBLE) / Medium Platform
+"1. In case of smart / PET
+1) Upper limit: 10
+2) Lower limit: -10
+2. In other cases,
+1) Upper limit: +60
+2) Lower limit: -60"
+Small Platform (SINGLE) / Combination (SINGLE + SINGLE)
+"1. In case of smart / PET
+1) Upper limit: 10
+2) Lower limit: -10
+2. In other cases,
+1) Upper limit: +120
+2) Lower limit: -60"
+[Stack] The PIDs at the top / bottom module are independent.
+Fan Motor NonFeedBack section MAXSTEP
+Value: 560
+[Stack] Bottom module's Fan Motor NonFeedBack section MAXSTEP: 560
+Fan minimum duty value (different from VSP)
+Value: 350
+Exceptional Flows
+Quality Attributes
+
+
+
 
 "[Title]
 Existing mode maintenance time when changing smart mode according to cleanliness level
