@@ -35,3 +35,56 @@ Ex. PET operation and the Windlevel is converted to "Windlevel-low" and the leve
 
 When the wind volume changes from a gentle wind to a Windlevel-high due to a sharp increase in pollution, the operation is switched to a Windlevel-high after 10 seconds of operation in a Windlevel-mid.
 ※ To increase user satisfaction by showing a quick response to pollution. 
+
+
+
+"[Title]
+Existing mode maintenance time when changing smart mode according to cleanliness level
+
+[Pre-Condition]
+1. Operation ON
+2. Mode: Smart Mode, Dust Display Level: 2 (1.0, 2.5, 10)., Gas Display: 3
+
+[Procedure]
+1. Dust display Level : 2, Gas display : 4 input
+2. Measurement of smart mode strong wind change time
+3. After 10 seconds, dust display level: 2 (1.0, 2.5, 10)., gas display: 3 change
+4. Time measurement from sensor change completion to mode change"	"2., 3. T1 time measurement
+4. T2 time measurement
+Confirm that T1+T2 time is more than 60 seconds
+
+※ Write the set sensor value in the comment
+ - PM10, PM2.5, PM1.0 values ​​respectively
+ - Also record the confirmed cleanliness color + I135"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"[Title]
+When changing the PET mode according to the cleanliness level, the existing mode maintenance time
+
+[Pre-Condition]
+1. Operation ON
+2. Mode: PET Mode, Dust Display Level: 4 (1.0, 2.5, 10), Gas Display: 2
+
+[Procedure]
+1. Dust display level: 2, gas display: 2 input
+2. Measurement of Breeze Change Time in PET Mode
+3. After 10 seconds, dust display level: 3 (1.0, 2.5, 10), gas display: 2 change
+4. Time measurement from sensor change completion to mode change"	"2., 3. T1 time measurement
+4. T2 time measurement
+Confirm that T1+T2 time is more than 60 seconds
+
+※ Write the set sensor value in the comment
+ - PM10, PM2.5, PM1.0 values ​​respectively
+ - I will also record the confirmed cleanliness color."
