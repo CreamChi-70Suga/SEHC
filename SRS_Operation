@@ -1,0 +1,37 @@
+Changes after maintaining the existing Windlevel for at least 1 minute when automatically requesting Windlevel conversion according to the cleanliness display level. 
+
+(Ex. During smart operation, the level of cleanliness display becomes 1, the Windlevel is converted to "Windlevel-low", and even if the level of cleanliness display becomes 3, it does not immediately switch to "Windlevel-mid" and switches to "Windlevel-mid" after operation to "Windlevel-low" for an additional 50 seconds)
+
+※ However, when the Windlevel fluctuates from "Windlevel-low" to "Windlevel-high" in the second stage, immediately switch to "Windlevel-mid", maintain "Windlevel-mid" operation for 10 seconds, and then switch to "Windlevel-high". 
+
+※ At this time, 10 seconds of "Windlevel-mid" is included within at least 1 minute, so Windlevel can be changed around 50 seconds after Windlevel-high conversion. ("Windlevel-mid" 10 seconds + "Windlevel-high" 50 seconds)
+
+When the wind volume changes from a WindLevel-low to a Windlevel-high due to a sharp increase in pollution, the operation is switched to a Windlevel-high after 10 seconds of operation in a Windlevel-mid.
+※ To increase user satisfaction by showing a quick response to pollution. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Changes after maintaining the existing Windlevel for at least 1 minute when automatically requesting Windlevel conversion according to the cleanliness display level. 
+
+(Even if the level of cleanliness display becomes 1 during 
+
+Ex. PET operation and the Windlevel is converted to "Windlevel-low" and the level of cleanliness display becomes 3 after 10 seconds, it is not immediately converted to "Windlevel-mid" and is converted to "Windlevel-mid" after operation to "Windlevel-low" for an additional 50 seconds)
+
+※ However, when the Windlevel fluctuates from "Windlevel-low" to "Windlevel-high" by two stage, immediately switch to "Windlevel-mid", maintain "Windlevel-mid" operation for 10 seconds, and then switch to "Windlevel-high". 
+
+
+※ At this time, 10 seconds of "Windlevel-mid" is included within at least 1 minute, so Windlevel can be changed around 50 seconds after Windlevel-high conversion. ("Windlevel-mid" 10 seconds + "Windlevel-high" 50 seconds)
+
+When the wind volume changes from a gentle wind to a Windlevel-high due to a sharp increase in pollution, the operation is switched to a Windlevel-high after 10 seconds of operation in a Windlevel-mid.
+※ To increase user satisfaction by showing a quick response to pollution. 
