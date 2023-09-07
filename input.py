@@ -10,9 +10,10 @@ from library import *
 from elements import *
 from common import *
 from output import *
+from FanRPM import *
 
 
-class InputFunctions(BaseDevice):
+class InputFunctions(BaseDevice, FanRpm):
 
     def __init__(self, outbug, aircon, source_address, name):
         self._outbug = outbug
@@ -21,6 +22,7 @@ class InputFunctions(BaseDevice):
         self._name = name
 
         self._result = Common(outbug, aircon)
+        self._out = OutputFunctions(outbug, aircon, source_address, name)
 
     # =============================================
     # Description - Set power on/off use USB switch tool
@@ -110,8 +112,55 @@ class InputFunctions(BaseDevice):
     # Parameter: Wind volume level (HIGH_WIND, MEDIUM_WIND, LOW_WIND, WIND_FREE, SLEEP)
     # return - None
     # =============================================
-    def set_wind(self, wind_level):
-        pass
+    def set_wind_level(self, wind_level):
+        state = self._out.check_operation_status()
+        if state == OPERATION_OFF:
+            Common.print_log("[set_wind_level] wait for turn on ")
+            self.set_operation_on_off(OPERATION_ON)
+            Common.wait(15)
+
+        self.set_mode(SMART_MODE)
+        self.set_gas_level(GAS_LEVEL1)
+        if wind_level == HIGH_WIND:
+            self.set_dust_level(4)
+        elif wind_level == MEDIUM_WIND:
+            self.set_dust_level(3)
+        elif wind_level == LOW_WIND:
+            self.set_dust_level(2)
+        elif wind_level == WIND_FREE_WIND:
+            self.set_mode(WIND_FREE_MODE)
+        elif wind_level == SLEEP_WIND:
+            self.set_mode(SLEEP_MODE)
+
+        Common.wait(TIME_ONE_MIN * 1)
+        target_rpm_top, target_rpm_bottom = self._out.get_target_rpm()
+        Common.print_log("[set_wind_level] target_rpm_top: %s, "
+                         "target_rpm_bottom: %s" % (target_rpm_top, target_rpm_bottom))
+        self.get_rpm_from_table(SMART_MODE, self._out.platform_model, self._out.rpm_option)
+        wind_cur = self.get_wind_level(target_rpm_top, target_rpm_bottom)
+        Common.print_log("[set_wind_level] Current wind level: %s!" % wind_cur)
+        if wind_cur == wind_level:
+            Common.print_log("[set_wind_level] Set level %s successfully!" % wind_level)
+        else:
+            self._result.Stop("[set_wind_level] Set level %s fail!" % wind_level)
+
+    # =============================================
+    # Description: Set operation status
+    # Parameter: Operation state (ON, OFF)
+    # return - None
+    # =============================================
+    def set_operation_on_off(self, state):
+        Common.print_log("[set_operation_on_off] Start set operation state to: %s " % state)
+        if state == OPERATION_OFF or state == OPERATION_ON:
+            self.set(ENUM_IN_OPERATION_ON_OFF, state)
+        else:
+            Common.print_log("[set_operation_on_off] Operation state is not exist: %s " % state)
+
+        is_success = self.compare_value(ENUM_OUT_OPERATION_STATUS, state, 'timeout', 3)
+        if is_success:
+            Common.print_log("[set_operation_on_off] Set operation state sucessfully: %s " % state)
+        else:
+            self._result.Stop("[set_operation_on_off] Fail to set operation state: %s " % state)
 
     # =============================================
     # Description: Set gas value from actor element
@@ -142,7 +191,6 @@ class InputFunctions(BaseDevice):
         else:
             self._result.Stop("[set_illu_sensor] can't set %s" % bright_level)
 
-
     # =============================================
     # Description: Set dust value from actor element
     # Parameter: Dust level (1, 2, 3, 4)
@@ -167,3 +215,69 @@ class InputFunctions(BaseDevice):
             Common.print_log("[set_dust_level] set %s successfully!" % dust_level)
         else:
             self._result.Stop("[set_dust_level] can't set %s" % dust_level)
+
+    # =============================================
+    # Description: Set auto windless mode entry conditions
+    # Parameter: X
+    # return - None
+    # =============================================
+    def auto_windless_mode_entry(self):
+        """
+        #precondition
+            #1. Set smart mode
+            #2. Set not entry to sleep mode - set BRIGHTNESS_LEVEL2
+        #proceeding
+            #1. Set cleanness level 1
+            #2. Wait 10 minutes
+        #Operation
+            #1. RPM = 480
+            #2. Close door
+        """
+
+        self.set_mode(SMART_MODE)
+        self.set_illu_sensor(BRIGHTNESS_LEVEL2)
+        Common.wait(TIME_ONE_SEC * 10)
+        self.set_gas_level(GAS_LEVEL1)
+        self.set_dust_level(1)
+
+        Common.wait(TIME_ONE_MIN * 10)
+
+        windless_entry = self.compare_value(VAR_OUT_TARGET_FAN_RPM_TOP, 480, 'timeout', 5)
+        if windless_entry:
+            Common.print_log("[auto_windless_mode_entry] Entry WindFree mode successfully!")
+        else:
+            self._result.Stop("[auto_windless_mode_entry] Entry WindFree mode Fail!")
+
+    # =============================================
+    # Description: Set auto sleep mode entry conditions
+    # Parameter: X
+    # return - None
+    # =============================================
+    def auto_sleep_mode_entry(self):
+        """
+        #precondition
+            #1. Set smart mode
+            #2. Set auto sleep mode in SmartThing app
+        #proceeding
+            #1. Set BRIGHTNESS_LEVEL0
+            #2. Wait 30 seconds
+        #Operation
+            #1. RPM = 400
+            #2. LCD, Led: off
+            #3. Ambient Lighting: White color.
+        """
+
+        self.set_mode(SMART_MODE)
+        # 2. Set auto sleep mode in SmartThing app (Wait library from Appview)
+
+        self.set_illu_sensor(BRIGHTNESS_LEVEL0)
+        Common.wait(TIME_ONE_SEC * 30)
+
+        sleep_entry = self.compare_value(VAR_OUT_TARGET_FAN_RPM_TOP, 400, 'timeout', 5)
+        if sleep_entry:
+            Common.print_log("[auto_windless_mode_entry] Entry sleep mode successfully!")
+        else:
+            self._result.Stop("[auto_windless_mode_entry] Entry sleep mode Fail!")
+
+
+

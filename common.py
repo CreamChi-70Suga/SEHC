@@ -18,7 +18,7 @@ class Common:
         self.outbug = outbug
         self.aircon = aircon
 
-        # ==============================================
+    # ==============================================
     # Description - Log Output
     # Parameter - msg : Message
     # # return - X
@@ -156,12 +156,12 @@ class BaseDevice:
     # =============================================
     def compare_value(self, *args):
         len_args = len(args)
-        timeout = args[len_args-1] if "timeout" in args else 2
+        timeout = args[len_args-1] if "timeout" in args else 5
         len_args = len(args) - 2 if "timeout" in args else len_args
         print(timeout, len_args)
 
         if len_args % 2 == 0:
-            for retry in range(0, 5):
+            for retry in range(0, 10):
                 Common.print_log("[compare_value] [retry: %s] check whether the element is written successfully?"
                                  % (retry + 1))
                 flag = True
@@ -182,4 +182,3 @@ class BaseDevice:
         else:
             Common.print_log("[compare_value][Error] Check args again!")
             return False
-
