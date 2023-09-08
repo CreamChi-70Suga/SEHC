@@ -5,9 +5,13 @@
 # VER		:
 # =============================================
 
-import common
+from common import *
 from elements import *
 from library import *
+from output import *
+from input import *
+
+
 
 rpm_dict = {
     PET_MODE: {
@@ -92,7 +96,7 @@ rpm_dict = {
 
 class FanRpm:
 
-    def __init__(self):
+    def __init__(self, outbug, aircon, source_address, name):
 
         self.rpm_sleep_mid = None
         self.rpm_sleep_top = None
@@ -103,7 +107,13 @@ class FanRpm:
         self.rpm_mid_mid = None
         self.rpm_mid_top = None
         self.rpm_high_mid = None
-        self.rpm_high_top = None
+
+        self._outbug = outbug
+        self._aircon = aircon
+        self._address = source_address
+        self._name = name
+        self._out = OutputFunctions(outbug, aircon, source_address, name)
+        self._in = InputFunctions(outbug, aircon, source_address, name)
 
     # =============================================
     # Description: get rpm value from table
@@ -128,11 +138,12 @@ class FanRpm:
         self.rpm_sleep_top = rpm_dict[mode][platform][rpm_option]["SLEEP"]["TOP"]
         self.rpm_sleep_mid = rpm_dict[mode][platform][rpm_option]["SLEEP"]["MID"]
 
-        print("rpm_high_top: %s, rpm_high_mid: %s" % (self.rpm_high_top, self.rpm_high_mid))
-        print("rpm_mid_top: %s, rpm_mid_mid: %s" % (self.rpm_mid_top, self.rpm_mid_mid))
-        print("rpm_low_top: %s, rpm_low_mid: %s" % (self.rpm_low_top, self.rpm_low_mid))
-        print("rpm_windfree_top: %s, rpm_windfree_mid: %s" % (self.rpm_windfree_top, self.rpm_windfree_mid))
-        print("rpm_sleep_top: %s, rpm_sleep_mid: %s" % (self.rpm_sleep_top, self.rpm_sleep_mid))
+        print("\t  [get_rpm_from_table]:")
+        print("\t  rpm_high_top: %s, rpm_high_mid: %s" % (self.rpm_high_top, self.rpm_high_mid))
+        print("\t  rpm_mid_top: %s, rpm_mid_mid: %s" % (self.rpm_mid_top, self.rpm_mid_mid))
+        print("\t  rpm_low_top: %s, rpm_low_mid: %s" % (self.rpm_low_top, self.rpm_low_mid))
+        print("\t  rpm_windfree_top: %s, rpm_windfree_mid: %s" % (self.rpm_windfree_top, self.rpm_windfree_mid))
+        print("\t  rpm_sleep_top: %s, rpm_sleep_mid: %s" % (self.rpm_sleep_top, self.rpm_sleep_mid))
 
     # =============================================
     # Description: get wind level depend on current rpm
@@ -140,7 +151,33 @@ class FanRpm:
     #            ex)  get_wind_level(1240, 0)
     # return - wind level(HIGH_WIND, MEDIUM_WIND, ..)
     # =============================================
-    def get_wind_level(self, top_rpm, mid_rpm):
+    def get_wind_level(self, mode, platform):
+        top_rpm, mid_rpm = self._out.get_absolute_rpm(mode, platform)
+        if top_rpm == self.rpm_high_top and (mid_rpm == self.rpm_high_mid or mid_rpm == 0):
+            return HIGH_WIND
+        elif top_rpm == self.rpm_mid_top and (mid_rpm == self.rpm_mid_mid or mid_rpm == 0):
+            return MEDIUM_WIND
+        elif top_rpm == self.rpm_low_top and (mid_rpm == self.rpm_low_mid or mid_rpm == 0):
+            return LOW_WIND
+        elif top_rpm == self.rpm_windfree_top and (mid_rpm == self.rpm_windfree_mid or mid_rpm == 0):
+            return WIND_FREE_WIND
+        elif top_rpm == self.rpm_sleep_top and (mid_rpm == self.rpm_sleep_mid or mid_rpm == 0):
+            return SLEEP_WIND
+        else:
+            return None
+
+    # =============================================
+    # Description: get wind level depend on current rpm
+    # Parameter: top_rpm, mid_rpm
+    #            ex)  get_wind_level(1240, 0)
+    # return - wind level(HIGH_WIND, MEDIUM_WIND, ..)
+    # =============================================
+    def measure_time(self, dust_level, gas_level):
+        dust = self._in.set_dust_level(dust_level)
+        gas = self._in.set_gas_level(gas_level)
+
+        top_rpm, mid_rpm = self._out.get_rpm()
+
         if top_rpm == self.rpm_high_top and mid_rpm == self.rpm_high_mid:
             return HIGH_WIND
         elif top_rpm == self.rpm_mid_top and mid_rpm == self.rpm_mid_mid:
@@ -153,5 +190,4 @@ class FanRpm:
             return SLEEP_WIND
         else:
             return None
-
 

@@ -149,18 +149,24 @@ class InputFunctions(BaseDevice, FanRpm):
     # Parameter: Operation state (ON, OFF)
     # return - None
     # =============================================
+    # Description: Set operation status
+    # Parameter: Operation state (OPERATION_OFF, OPERATION_ON)
+    #           ex) set_operation_on_off(OPERATION_OFF)
+    # return - None
+    # =============================================
     def set_operation_on_off(self, state):
         Common.print_log("[set_operation_on_off] Start set operation state to: %s " % state)
-        if state == OPERATION_OFF or state == OPERATION_ON:
+        # Check SETs is on or off
+        current_state = self._out.check_operation_status()
+        if current_state != state:
             self.set(ENUM_IN_OPERATION_ON_OFF, state)
+            is_success = self.compare_value(ENUM_OUT_OPERATION_STATUS, state, 'timeout', 3)
+            if is_success:
+                Common.print_log("[set_operation_on_off] Set operation state successfully: %s " % state)
+            else:
+                self._result.Stop("[set_operation_on_off] Fail to set operation state: %s " % state)
         else:
-            Common.print_log("[set_operation_on_off] Operation state is not exist: %s " % state)
-
-        is_success = self.compare_value(ENUM_OUT_OPERATION_STATUS, state, 'timeout', 3)
-        if is_success:
-            Common.print_log("[set_operation_on_off] Set operation state sucessfully: %s " % state)
-        else:
-            self._result.Stop("[set_operation_on_off] Fail to set operation state: %s " % state)
+            Common.print_log("[set_operation_on_off] Current operation: %s " % current_state)
 
     # =============================================
     # Description: Set gas value from actor element
@@ -279,5 +285,22 @@ class InputFunctions(BaseDevice, FanRpm):
         else:
             self._result.Stop("[auto_windless_mode_entry] Entry sleep mode Fail!")
 
+    # =============================================
+    # Description: Calculate the time between two changed sensor level
+    # Parameter: sensor_level (1,2,3,4)
+    # return - None
+    # =============================================
+    def measure_time(self):
+        """
+        # precondition
+            # 1. set operation on (default)
+            # 2. set smart mode (default) / pet mode
+            # 3. set ANY cleanness level (1)
+
+        # procedure
+            # set ANY cleanness level (2)
+            # T1 = end - start
+            # T2 = end - T1
+        """
 
 

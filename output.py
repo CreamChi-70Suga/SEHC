@@ -4,9 +4,8 @@
 # AUTHOR	:
 # VER		:
 # =============================================
-
-import time
 from library import *
+import input
 from elements import *
 from common import *
 
@@ -107,4 +106,37 @@ class OutputFunctions(BaseDevice):
         Common.print_log("[get_mode] Mode: %s " % mode)
         return mode
 
+    def get_absolute_rpm(self, mode, platform):
+        abs_top_rpm = 0
+        abs_mid_rpm = 0
+
+        for retry in range(0, 3):
+            if mode == SMART_MODE or mode == PET_MODE:
+                rpm_range = range(-10, 11)
+            else:
+                if platform == "SMALL":
+                    rpm_range = range(-60, 121)
+                elif platform == "MEDIUM":
+                    rpm_range = range(-60, 61)
+
+            top_rpm, mid_rpm = self.get_rpm()
+            top_rpm_target, mid_rpm_target = self.get_target_rpm()
+            top_limit = top_rpm_target - top_rpm
+            mid_limit = mid_rpm_target - mid_rpm
+            Common.wait(30)
+            if top_limit in rpm_range and mid_limit in rpm_range:
+                abs_top_rpm, abs_mid_rpm = top_rpm_target, mid_rpm_target
+                Common.print_log("[get_absolute_rpm] Target RPM's range: Top: [%s, %s], Mid: [%s, %s]" %
+                                 (abs_top_rpm + rpm_range[0], abs_top_rpm + (rpm_range[len(rpm_range) - 1]),
+                                  abs_mid_rpm + rpm_range[0], abs_mid_rpm + (rpm_range[len(rpm_range) - 1])))
+                break
+            else:
+                Common.print_log("[get_absolute_rpm] RPM value is not in target RPM range")
+
+            # Common.wait(30)
+            Common.print_log("[get_absolute_rpm] [Retry]: %s"
+                             "\n\t   [get_rpm] Top Fan RPM: %s, Mid Fan RPM: %s"
+                             "\n\t   [get_target_rpm] Top Fan RPM: %s, Mid Fan RPM: %s" % (
+                                 (retry + 1), top_rpm, mid_rpm, top_rpm_target, mid_rpm_target))
+        return abs_top_rpm, abs_mid_rpm
 

@@ -58,7 +58,7 @@ LOW_WIND = 3
 WIND_FREE_WIND = 2
 SLEEP_WIND = 1
 
-#Platform size model
+# Platform size model
 MEDIUM_SIZE = "MEDIUM"
 SMALL_SIZE = "SMALL"
 

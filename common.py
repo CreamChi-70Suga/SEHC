@@ -175,10 +175,87 @@ class BaseDevice:
 
                 if flag:
                     return True
-                #wait 1s to update value
+                # wait 1s to update value
                 Common.wait(timeout)
 
             return False
         else:
             Common.print_log("[compare_value][Error] Check args again!")
             return False
+
+        # =============================================
+        # Description - Update the latest values of multiple elements at once
+        # Parameter - *args: Element list
+        # return-X
+        # =============================================
+    def update(self, *args):
+        update_list = []
+
+        for i in range(0, len(args)):
+            if args[i] in VIRTUAL_ELEMENT_TABLE:  # Element is a virtual element
+                if VIRTUAL_ELEMENT_TABLE[args[i]] not in update_list:  # update If it is not added to the list
+                    update_list.append(VIRTUAL_ELEMENT_TABLE[
+                                           args[i]])  # update Adding real elements of virtual elements to the list
+                    continue
+            else:
+                update_list.append(args[i])
+            update_list.append(0x00)
+
+        self._aircon.SetValues(update_list, self._sender_address, self._address, self._str_cmd, self._get_cmd)
+        time.sleep(1)
+
+    # =============================================
+    # Description 	- Wait until the value of the corresponding element reaches the target
+    # Parameter 	- *args: (Element, Value, Element, Value..., Timeout)
+    # 				ex) wait_value("Room Temperature", 24, "Eva In", 10, 60 * 3)
+    # return 		- arrival time
+    # =============================================
+    def wait_value(self, *args):
+        args = list(args)
+        args_len = len(args)
+
+        if args_len % 2 == 0:
+            Common.Stop("[wait_value] Timeout value passed incorrectly")
+            return
+
+        timeout = args[args_len - 1]
+        data_len = args_len - 2
+        del args[-1]
+
+        success_list = []
+        fail_dict = {}
+        update_list = args[::2]
+
+        elapsed_time = 0
+        start_time = int(time.time())
+
+        while elapsed_time <= timeout:
+            elapsed_time = int(time.time()) - start_time
+
+            self.update(*update_list)
+
+            for i in range(0, data_len, 2):
+                element = args[i]
+                target = args[i + 1]
+
+                if element not in success_list:
+                    current = self.get(element, send=False)
+
+                    if current == target:
+                        Common.print_log(
+                            "[wait_value] PASS, %s Target:[%s] / Current:[%s]" % (element, target, current))
+                        success_list.append(element)
+                        update_list.remove(element)
+                    else:
+                        fail_dict[element] = (target, current)
+
+                    if len(update_list) == 0:
+                        Common.print_log("[wait_value] Total PASS, time taken %d seconds" % elapsed_time)
+                        return elapsed_time
+
+        for k in fail_dict:
+            if k not in success_list:
+                Common.print_log(
+                    "[wait_value] FAIL, %s Target:[%s] / Current:[%s]" % (k, fail_dict[k][0], fail_dict[k][1]))
+
+        Common.Stop("[wait_value] Failure to reach element value within time limit", debug=True)
