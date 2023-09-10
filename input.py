@@ -290,17 +290,32 @@ class InputFunctions(BaseDevice, FanRpm):
     # Parameter: sensor_level (1,2,3,4)
     # return - None
     # =============================================
-    def measure_time(self):
+       def measure_time(self, sensor_level):
         """
-        # precondition
-            # 1. set operation on (default)
-            # 2. set smart mode (default) / pet mode
-            # 3. set ANY cleanness level (1)
+        default: operation On, Smart mode
+        =========================================================
+        1. Pre-condition:
+            operation: On
+            mode: Smart / Pet
+            => input initial sensor value : set any level
+        =========================================================
+        2. Conditions:
+            total = 0
+            start = int(time.time())
+            => sensor value is changed: set any level
+            if set_level in range [set_level]
+                end = int(time.time())
+                total = end-start
+                if total > 60:
+                    print("[PASS] %s" total)
+                else:
+                    print("[ERROR] %s" total)
+        3. Expected:
+            - total > 60 seconds
+        =========================================================
 
-        # procedure
-            # set ANY cleanness level (2)
-            # T1 = end - start
-            # T2 = end - T1
         """
+        pass
+ 
 
 
