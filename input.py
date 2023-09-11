@@ -284,7 +284,25 @@ class InputFunctions(BaseDevice, FanRpm):
             Common.print_log("[auto_windless_mode_entry] Entry sleep mode successfully!")
         else:
             self._result.Stop("[auto_windless_mode_entry] Entry sleep mode Fail!")
+            
+    # =============================================
+    # Description: Waiting for RPM in range
+    # Parameter: level (1/2/3/4)
+    # return - None
+    # =============================================
+    def wait_time(self, level):
+        start_time = time.time()
+        cur_rpm = 0
+        if 0 < level:
+            while cur_rpm not in RPM_WIND_LEVEL_CONFIG[level]:
+                cur_rpm = self.get(VAR_OUT_FAN_RPM_TOP)
+                print("cur_rpm : %s" % cur_rpm)
+                Common.wait(3)
 
+        elapsed_time = time.time() - start_time
+        print("elapsed_time: %s" % elapsed_time)
+        return elapsed_time
+        
     # =============================================
     # Description: Calculate the time between two changed sensor level
     # Parameter: sensor_level (1,2,3,4)
