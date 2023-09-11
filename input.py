@@ -315,7 +315,38 @@ class InputFunctions(BaseDevice, FanRpm):
         =========================================================
 
         """
-        pass
+        #precondition
+        self.set_operation_on_off(OPERATION_ON)
+        self.set_mode(SMART_MODE)
+        self.set_gas_level(GAS_LEVEL2)
+        self.set_dust_level(4)
+        Common.wait(60)
+
+        #Procedure
+        self.set_gas_level(GAS_LEVEL2)
+        self.set_dust_level(2)
+        start_time = time.time()
+        cur_rpm = 0
+        while cur_rpm not in range(549, 571):
+            cur_rpm = self.get(VAR_OUT_FAN_RPM_TOP)
+            print("cur_rpm : %s" % cur_rpm)
+            Common.wait(1)
+
+        eslap_time_1 = time.time() - start_time
+        print("eslap_time_1: %s" % eslap_time_1)
+
+        Common.wait(10)
+        self.set_dust_level(3)
+        start_time = time.time()
+        cur_rpm = 0
+        while cur_rpm not in range(869, 891):
+            cur_rpm = self.get(VAR_OUT_FAN_RPM_TOP)
+            print("cur_rpm : %s" % cur_rpm)
+            Common.wait(1)
+
+        eslap_time_2 = time.time() - start_time
+        print("eslap_time_2: %s" % eslap_time_2)
+
  
 
 
