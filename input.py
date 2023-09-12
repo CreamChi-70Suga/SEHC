@@ -288,79 +288,53 @@ class InputFunctions(BaseDevice, FanRpm):
     # =============================================
     # Description: Waiting for RPM in range
     # Parameter: level (1/2/3/4)
-    # return - None
+    # return - elapsed_time
     # =============================================
     def wait_time(self, level):
         start_time = time.time()
         cur_rpm = 0
-        if 0 < level:
-            while cur_rpm not in RPM_WIND_LEVEL_CONFIG[level]:
-                cur_rpm = self.get(VAR_OUT_FAN_RPM_TOP)
-                print("cur_rpm : %s" % cur_rpm)
-                Common.wait(3)
+        while cur_rpm not in RPM_WIND_LEVEL_CONFIG[level]:
+            cur_rpm = self.get(VAR_OUT_FAN_RPM_TOP)
+            print("Current RPM: %s" % cur_rpm)
+            Common.wait(3)
 
         elapsed_time = time.time() - start_time
         print("elapsed_time: %s" % elapsed_time)
         return elapsed_time
-        
+
     # =============================================
     # Description: Calculate the time between two changed sensor level
-    # Parameter: sensor_level (1,2,3,4)
-    # return - None
+    # Parameter: initial_level (1/2/3/4) and set_level (1/2/3/4)
+    # return - measurement time
     # =============================================
-        def measure_time_change_wind_level(self):
-            """
-            default: operation On, Smart mode
-            =========================================================
-            1. Pre-condition:
-                operation: On
-                mode: Smart / Pet
-                => input initial sensor value : set any level
-            =========================================================
-            2. Conditions:
-                total = 0
-                start = int(time.time())
-                => sensor value is changed: set any level
-                if set_level in range [set_level]
-                    end = int(time.time())
-                    total = end-start
-                    if total > 60:
-                        print("[PASS] %s" total)
-                    else:
-                        print("[ERROR] %s" total)
-            3. Expected:
-                - total > 60 seconds
-            =========================================================
-    
-            """
-            #precondition
-            self.set_operation_on_off(OPERATION_ON)
-            self.set_mode(SMART_MODE)
+    def measure_time_change_wind_level(self, initial_level, set_level):
+        # Pre-condition
+        measurement_time = 0
+        self.set_operation_on_off(OPERATION_ON)
+        self.set_mode(SMART_MODE)
+        if initial_level == 4:
+            self.set_gas_level(GAS_LEVEL4)
+        elif initial_level == 3:
+            self.set_gas_level(GAS_LEVEL3)
+        elif initial_level == 2:
             self.set_gas_level(GAS_LEVEL2)
-            self.set_dust_level(4)
-            Common.wait(60)
-    
-            #Procedure
+        elif initial_level == 1:
+            self.set_gas_level(GAS_LEVEL1)
+
+        self.wait_time(initial_level)
+
+        # Procedure
+        if set_level == 4:
+            self.set_gas_level(GAS_LEVEL4)
+        elif set_level == 3:
+            self.set_gas_level(GAS_LEVEL3)
+        elif set_level == 2:
             self.set_gas_level(GAS_LEVEL2)
-            self.set_dust_level(2)
-            start_time = time.time()
-            cur_rpm = 0
-            while cur_rpm not in range(549, 571):
-                cur_rpm = self.get(VAR_OUT_FAN_RPM_TOP)
-                print("cur_rpm : %s" % cur_rpm)
-                Common.wait(1)
-    
-            elapsed_time_1 = time.time() - start_time
-            print("elapsed_time_1: %s" % elapsed_time_1)
-    
-            Common.wait(10)
-            self.set_dust_level(3)
-            start_time = time.time()
-            cur_rpm = 0
-            while cur_rpm not in range(869, 891):
-                cur_rpm = self.get(VAR_OUT_FAN_RPM_TOP)
-                print("cur_rpm : %s" % cur_rpm)
-                Common.wait(1)
-    
-            elapsed_time_2 = time.time() - start_time
-            print("elapsed_time_2: %s" % elapsed_time_2)
+        elif set_level == 1:
+            self.set_gas_level(GAS_LEVEL1)
+
+        measurement_time = self.wait_time(set_level)
+        if measurement_time > 60:
+            Common.print_log("[measure_time_change_wind_level] PASS")
+        else:
+            Common.print_log("[measure_time_change_wind_level] FAIL")
