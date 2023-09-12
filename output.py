@@ -140,3 +140,41 @@ class OutputFunctions(BaseDevice):
                                  (retry + 1), top_rpm, mid_rpm, top_rpm_target, mid_rpm_target))
         return abs_top_rpm, abs_mid_rpm
 
+    # =============================================
+    # Description: Get absolute value of current fan RPM based on target RPM
+    # Parameter: Mode (SMART_MODE or PET_MODE),
+    #            Platform type (SMALL_SIZE, MEDIUM_SIZE)
+    # return - RPM absolute values (top fan, middle fan)
+    # =============================================
+    def get_current_rpm(self, mode, platform):
+        abs_top_rpm = 0
+        abs_mid_rpm = 0
+
+        if mode == SMART_MODE or mode == PET_MODE:
+            rpm_range = range(-10, 11)
+        else:
+            if platform == "SMALL":
+                rpm_range = range(-60, 121)
+            elif platform == "MEDIUM":
+                rpm_range = range(-60, 61)
+
+        for retry in range(0, 30):
+            Common.wait(3)
+            top_rpm, mid_rpm = self.get_rpm()
+            top_rpm_target, mid_rpm_target = self.get_target_rpm()
+            top_limit = top_rpm_target - top_rpm
+            mid_limit = mid_rpm_target - mid_rpm
+
+            if top_limit in rpm_range and mid_limit in rpm_range:
+                abs_top_rpm, abs_mid_rpm = top_rpm_target, mid_rpm_target
+                Common.print_log("[get_current_rpm] Current RPM values are in range: Top: [%s, %s], Mid: [%s, %s]" %
+                                 (abs_top_rpm + rpm_range[0], abs_top_rpm + (rpm_range[len(rpm_range) - 1]),
+                                  abs_mid_rpm + rpm_range[0], abs_mid_rpm + (rpm_range[len(rpm_range) - 1])))
+                break
+            else:
+                Common.print_log("[get_current_rpm] RPM value is not in target RPM range")
+
+            Common.print_log("[get_current_rpm] [Retry]: %s" % (retry + 1))
+        return abs_top_rpm, abs_mid_rpm
+
+
