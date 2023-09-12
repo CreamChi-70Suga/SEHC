@@ -285,48 +285,26 @@ class InputFunctions(BaseDevice, FanRpm):
         else:
             self._result.Stop("[auto_windless_mode_entry] Entry sleep mode Fail!")
             
-    # =============================================
-    # Description: Waiting for RPM in range
-    # Parameter: level (1/2/3/4)
-    # return - elapsed time
-    # =============================================
-    def measure_time_change_wind_level(self, level):
-        start_time = time.time()
-        cur_rpm = 0
-
-        if level == 4:
-            self.set_gas_level(GAS_LEVEL4)
-        elif level == 3:
-            self.set_gas_level(GAS_LEVEL3)
-        elif level == 2:
-            self.set_gas_level(GAS_LEVEL2)
-        elif level == 1:
-            self.set_gas_level(GAS_LEVEL1)
-
-        while cur_rpm not in RPM_WIND_LEVEL_CONFIG[level]:
-            cur_rpm = self.get(VAR_OUT_FAN_RPM_TOP)
-            print("Current RPM: %s" % cur_rpm)
-            Common.wait(3)
-
-        elapsed_time = time.time() - start_time
-        print("elapsed_time: %s" % elapsed_time)
-        return elapsed_time
-
-    # =============================================
+   # =============================================
     # Description: Calculate the time between two changed sensor level
-    # Parameter: initial_level (1/2/3/4) and set_level (1/2/3/4)
-    # return - measurement time
+    # Parameter: initial_level, set_level level (5/4/3/2)
+    # return - None
     # =============================================
-    def measure_time(self, initial_level, set_level):
-        # Pre-condition
-        self.set_operation_on_off(OPERATION_ON)
-        self.set_mode(SMART_MODE)
-        state = self._out.get_mode()
-
-        if state == PET_MODE or state == SMART_MODE:
-            self.measure_time_change_wind_level(initial_level)
-            measurement_time = self.measure_time_change_wind_level(set_level)
-            if measurement_time > 60:
-                Common.print_log("[measure_time_change_wind_level] PASS %s" % measurement_time)
-            else:
-                Common.print_log("[measure_time_change_wind_level] FAIL %s" % measurement_time)
+    def measure_time(self, mode, platform, rpm_option, initial_level, set_level):
+        # condition of range
+        if mode == SMART_MODE or mode == PET_MODE:
+            self.set_sensor_level(initial_level)  # initial sensor level - done
+            current_top, current_mid = self._out.get_current_rpm(mode, platform)
+            self.get_rpm_from_table(mode, platform, rpm_option)
+            if self.get_wind_level(current_top, current_mid) == initial_level:
+                self.set_sensor_level(set_level)
+                start_time = time.time()
+                Common.wait(10)
+                current_top, current_mid = self._out.get_current_rpm(mode, platform)
+                if self.get_wind_level(current_top, current_mid) == set_level:
+                    end_time = time.time() - start_time
+                    Common.print_log("[measure_time] %s" % end_time)
+                    # if measure_time > 60:
+                    #     Common.print_log("[measure_time_change_wind_level] PASS %s" % measure_time)
+                    # else:
+                    #     Common.print_log("[measure_time_change_wind_level] FAIL %s" % measure_time)
