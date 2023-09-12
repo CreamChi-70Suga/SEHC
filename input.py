@@ -284,8 +284,33 @@ class InputFunctions(BaseDevice, FanRpm):
             Common.print_log("[auto_windless_mode_entry] Entry sleep mode successfully!")
         else:
             self._result.Stop("[auto_windless_mode_entry] Entry sleep mode Fail!")
+
+    # =============================================
+    # Description: Set a value from actor element
+    # Parameter: Wind volume level (HIGH_WIND, MEDIUM_WIND, LOW_WIND, WIND_FREE, SLEEP)
+    # return - None
+    # =============================================
+    def set_sensor_level(self, wind_level):
+        state = self._out.check_operation_status()
+        if state == OPERATION_OFF:
+            Common.print_log("[set_sensor_level] wait for turn on ")
+            self.set_operation_on_off(OPERATION_ON)
+            Common.wait(15)
+
+        self.set_mode(SMART_MODE)
+        self.set_gas_level(GAS_LEVEL1)
+        if wind_level == HIGH_WIND:
+            self.set_dust_level(4)
+        elif wind_level == MEDIUM_WIND:
+            self.set_dust_level(3)
+        elif wind_level == LOW_WIND:
+            self.set_dust_level(2)
+        elif wind_level == WIND_FREE_WIND:
+            self.set_mode(WIND_FREE_MODE)
+        elif wind_level == SLEEP_WIND:
+            self.set_mode(SLEEP_MODE)
             
-   # =============================================
+    # =============================================
     # Description: Calculate the time between two changed sensor level
     # Parameter: initial_level, set_level level (5/4/3/2)
     # return - None
