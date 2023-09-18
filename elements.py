@@ -62,3 +62,7 @@ RPM_WIND_LEVEL_CONFIG = [
     range(869, 891),
     range(1279, 1301)
 ]
+btn_ai_cleaning_switch_on = "On, AI purify , Switch"
+btn_ai_cleaning_switch_off = "Off, AI purify , Switch"
+btn_switch_on = "On, , Switch"
+btn_switch_off = "Off, , Switch"
