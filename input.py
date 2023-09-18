@@ -311,25 +311,76 @@ class InputFunctions(BaseDevice, FanRpm):
             self.set_mode(SLEEP_MODE)
             
     # =============================================
-    # Description: Calculate the time between two changed sensor level
-    # Parameter: initial_level, set_level level (5/4/3/2)
-    # return - None
+    # Description: Calculate the time between wind level change
+    # Parameter: mode, rpm_option, gas_level, dust_level, wind_level
+    #            ex)measure_time_change_wind_level(SMART_MODE, "1", GAS_LEVEL2, 2, LOW_WIND)
+    # return - elapsed_time
     # =============================================
-    def measure_time(self, mode, platform, rpm_option, initial_level, set_level):
-        # condition of range
-        if mode == SMART_MODE or mode == PET_MODE:
-            self.set_sensor_level(initial_level)  # initial sensor level - done
-            current_top, current_mid = self._out.get_current_rpm(mode, platform)
-            self.get_rpm_from_table(mode, platform, rpm_option)
-            if self.get_wind_level(current_top, current_mid) == initial_level:
-                self.set_sensor_level(set_level)
-                start_time = time.time()
-                Common.wait(10)
-                current_top, current_mid = self._out.get_current_rpm(mode, platform)
-                if self.get_wind_level(current_top, current_mid) == set_level:
-                    end_time = time.time() - start_time
-                    Common.print_log("[measure_time] %s" % end_time)
-                    # if measure_time > 60:
-                    #     Common.print_log("[measure_time_change_wind_level] PASS %s" % measure_time)
-                    # else:
-                    #     Common.print_log("[measure_time_change_wind_level] FAIL %s" % measure_time)
+
+    def measure_time_change_wind_level(self, mode, rpm_option, gas_level, dust_level, wind_level):
+
+        self.set_gas_level(gas_level)
+        self.set_dust_level(dust_level)
+
+        start_time = time.time()
+        Common.print_log("[measure_time_change_wins_level] start_time: %s" % datetime.datetime.now())
+
+        self.get_rpm_from_table(mode, self._out.platform_model, rpm_option)
+        target_top = 0
+        target_mid = 0
+        if wind_level == 5:
+            target_top = self.rpm_high_top
+            target_mid = self.rpm_high_mid
+        elif wind_level == 4:
+            target_top = self.rpm_mid_top
+            target_mid = self.rpm_mid_mid
+        elif wind_level == 3:
+            target_top = self.rpm_low_top
+            target_mid = self.rpm_low_mid
+        elif wind_level == 2:
+            target_top = self.rpm_windfree_top
+            target_mid = self.rpm_windfree_mid
+        elif wind_level == 1:
+            target_top = self.rpm_sleep_top
+            target_mid = self.rpm_sleep_mid
+
+        self._out.get_absolute_rpm(mode, target_top, target_mid)
+
+        elapsed_time = time.time() - start_time
+        Common.print_log("[measure_time_change_wins_level] End_time: %s" % datetime.datetime.now())
+        Common.print_log("[measure_time_change_wins_level] elapsed_time: %s" % elapsed_time)
+
+        return elapsed_time
+
+
+class InputFunctionsMobile(UserAPIAppView, Common):
+
+    def __init__(self, mobile):
+        self.mobile = mobile
+        self._out = OutputFunctionsMobile(mobile)
+
+    # =============================================
+    # Description: Enable/Disable AI Cleaning On/Off status
+    # Parameter:  State (btn_ai_cleaning_switch_on, btn_ai_cleaning_switch_off)
+    # Return - None
+    # =============================================
+    def enable_disable_AICleaning(self, state):
+        current_state = self.mobile.HasTextAND(btn_ai_cleaning_switch_off)
+        if current_state is True:
+            if state == btn_ai_cleaning_switch_on:
+                self.mobile.user_touch({'resource-id': 'DAAIRP300123'})
+                self.wait(3)
+                self._out.get_AICleaning()
+            elif state == btn_ai_cleaning_switch_off:
+                self._out.get_AICleaning()
+
+        elif current_state is False:
+            if state == btn_ai_cleaning_switch_on:
+                self._out.get_AICleaning()
+            elif state == btn_ai_cleaning_switch_off:
+                self.mobile.user_touch({'resource-id': 'DAAIRP300123'})
+                self.wait(3)
+                self._out.get_AICleaning()
+
+        else:
+            Common.print_log("[enable_AICleaning] Can't switch toggle!")
