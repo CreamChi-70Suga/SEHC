@@ -177,4 +177,26 @@ class OutputFunctions(BaseDevice):
             Common.print_log("[get_current_rpm] [Retry]: %s" % (retry + 1))
         return abs_top_rpm, abs_mid_rpm
 
+# MOBILE ==================
+class OutputFunctionsMobile(UserAPIAppView, Common):
 
+    def __init__(self, mobile):
+        self.mobile = mobile
+
+    # =============================================
+    # Description: check status AI Cleaning
+    # Parameter:  X
+    # Return - state
+    # =============================================
+    def get_AICleaning(self):
+        self.user_touch(
+            {'text': 'AI purify, Enable air purifying-related features when the indoor air quality is '
+                     'bad.'})
+        self.wait(3)
+        current_state = self.mobile.HasTextAND(btn_switch_off)
+        if current_state is True:
+            Common.print_log("[enable_AICleaning] Ai purify Off")
+        elif current_state is False:
+            Common.print_log("[enable_AICleaning] Ai purify On")
+        else:
+            Common.print_log("[get_AICleaning] Can't get toggle!")
