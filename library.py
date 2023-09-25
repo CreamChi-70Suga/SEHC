@@ -62,6 +62,23 @@ SLEEP_WIND = 1
 MEDIUM_SIZE = "MEDIUM"
 SMALL_SIZE = "SMALL"
 
+# =========================== MOBILE DEFINITIONS ==============================
 
+# Values of bounds
+swipe_up_bound = (500, 1600, 550, 600, 1)
+swipe_down_bound = (500, 600, 550, 1600, 1)
+
+# Define notify for app view
+ERROR_NOTIF = "[ERROR]"
+PASS_NOTIF = "[PASS]"
+FAIL_NOTIF = "[FAIL]"
+WARNING_NOTIF = "[WARNING]"
+
+GOOD_AIR = 'Good'
+NORMAL_AIR = 'Normal'
+BAD_AIR = 'Poor'
+VERY_BAD_AIR = 'Very poor'
+
+STATE_AIR = ['Good', 'Normal', 'Poor', 'Very poor']
 
 

@@ -26,6 +26,8 @@ VAR_OUT_FAN_RPM_MID = "vFanRpmMid"
 VAR_OUT_TARGET_FAN_RPM_TOP = "targetTop"
 VAR_OUT_TARGET_FAN_RPM_MID = "targetMid"
 ENUM_OUT_OPERATION_STATUS = "Operation Status"
+VAR_OUT_ANGLE = "Angle"
+VAR_OUT_CUMULATIVE_POWER = "Cumulative Power Consumption"
 
 
 SMART_MODE = "Smart"
@@ -55,14 +57,27 @@ GAS_CONFIG = [GAS_LEVEL1, GAS_LEVEL2, GAS_LEVEL3, GAS_LEVEL4]
 
 ILLUMINANCE_CONFIG = [BRIGHTNESS_LEVEL0, BRIGHTNESS_LEVEL1, BRIGHTNESS_LEVEL2]
 
-RPM_WIND_LEVEL_CONFIG = [
-    (),
-    range(469, 491),
-    range(549, 571),
-    range(869, 891),
-    range(1279, 1301)
-]
-btn_ai_cleaning_switch_on = "On, AI purify , Switch"
-btn_ai_cleaning_switch_off = "Off, AI purify , Switch"
-btn_switch_on = "On, , Switch"
-btn_switch_off = "Off, , Switch"
+# =========================== MOBILE ELEMENTS ==============================
+
+btn_ai_cleaning_on_txt = "On, AI purify , Switch"
+btn_ai_cleaning_off_txt = "Off, AI purify , Switch"
+btn_welcome_care_on_txt = "On, Welcome air care , Switch"
+btn_welcome_care_off_txt = "Off, Welcome air care , Switch"
+btn_smart_sleep_on_txt = "On, Smart Sleep Mode , Switch"
+btn_smart_sleep_off_txt = "Off, Smart Sleep Mode , Switch"
+btn_switch_on_txt = "On, , Switch"
+btn_switch_off_txt = "Off, , Switch"
+btn_power_on_txt = "Power on, Air Purifier, Button, "
+btn_power_off_txt = "Power off, Air Purifier, Button, "
+
+ai_cleaning_txt = "AI purify, Enable air purifying-related features when the indoor air quality is bad."
+smart_sleep_off_txt = "Smart Sleep Mode , Turn on Sleep mode for a set time when your surroundings are dark."
+welcome_care_txt = "Welcome air care , Receive notifications to turn on your air purifier when you\\'re nearly home"
+
+smart_mode_txt = "Mode, Smart"
+max_mode_txt = "Mode, Max"
+windfree_mode_txt = "Mode, Wind Free"
+sleep_mode_txt = "Mode, Sleep"
+pet_mode_txt = "Mode, Pet"
+
+list_mode_operation = [smart_mode_txt, max_mode_txt, windfree_mode_txt, sleep_mode_txt, pet_mode_txt]

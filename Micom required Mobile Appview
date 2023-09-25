@@ -1,0 +1,304 @@
+import time
+
+# User Setting #############################################################################
+WIFIOS = "tizenRT"
+PROTOCOL = "OCF"
+WIFI_CHIPSET = "TP1X"
+sWiFiPA = 'G7WOd)D@sjul23#I'
+NATION = "KR"
+PRODUCT_NAME = "Air purifier"
+MODEL_NAME = "RF85A98T1AP"
+SERIAL_NUMBER = "BMNNP9AT200330E"
+isSupportQRConfirm = True
+
+IOT_SERVER = "PRD"
+META_SERVER = "PRD"
+PLUGIN_SERVER = "PRD"
+CATALOG_SERVER = "PRD"
+FACTORY_RESET_CMD = "reset"
+SOFTAP_ON_CMD = "easysetup start"
+SOFTAP_OFF_CMD = "easysetup stop"
+CONFIRM_CMD = "easysetup confirm"
+AP_SSID = "R&D_Test"
+
+ServiceName = "Cooking"
+
+#  Mobile Setting  #############################################################################
+
+Device_name = "Galaxy15"
+
+try:
+    Device_name.IsEnable = True
+    print("[ OK ] Device is connected")
+except Exception:
+    print("[ ERROR ] Device is not connected")
+
+###################################################################################################
+"""
+####  WiFi Setting  #############################################################################
+from ext_lib import WifiLogger
+SERIAL_PORTNAME = "COM8"
+SERIAL_BAUDRATE = 115200
+READ_TIMEOUT = 1
+LOGLEVEL = 0
+wifilogger = WifiLogger(SERIAL_PORTNAME, SERIAL_BAUDRATE, READ_TIMEOUT, LOGLEVEL)
+"""
+
+
+###################################################################################################
+def USER_CompareText1ST(mobile, text):
+    try:
+        x, y = mobile.GetTextXY(text)[0]
+        return True
+    except Exception:
+        return False
+
+
+def USER_GetTextXY1STandTouch(mobile, text):
+    results, x, y = USER_GetTextXY1ST(mobile=mobile, text=text)
+    if (results == True):
+        mobile.Touch(x, y)
+        return True
+    else:
+        print("[ERROR]  Couldnt Touch")
+        return False
+
+
+def GetObjectByTextAndTouch(mobile, text):
+    try:
+        result = mobile.GetObject({'text': text}, random=False, regex=False)
+        text_tmp = result[0].get('text')
+        if text_tmp == text:
+            mobile.TouchObject({'text': text}, random=False, regex=False)
+            return True
+        else:
+            print("[ERROR] Text is Not Found")
+            return False
+    except Exception:
+        print("[ERROR]  Text is Not Found")
+        return False
+
+
+def USER_GetTextXY1STandLongTouch(mobile, text, duration):
+    results, x, y = USER_GetTextXY1ST(mobile=mobile, text=text)
+    if (results == True):
+        mobile.Touch(x, y, duration)
+        return True
+    else:
+        print("[ERROR]  Couldnt Touch")
+        return False
+
+
+def USER_GetTextXY1ST(mobile, text):
+    try:
+        x, y = mobile.GetTextXY(text)[0]
+        return True, x, y
+    except Exception:
+        print("[ERROR]  Text is Not Found")
+        return False, 0, 0
+
+
+def USER_CompareText1STandWait(mobile, Text, Max_Seconds, Fail_Comment):
+    Max_Seconds = Max_Seconds + time.time()
+    while (USER_CompareText1ST(mobile=mobile, text=Text) == False):
+        print("[WAIT TEXT] - {}").format(Text)
+        if (time.time() > Max_Seconds):
+            print(Fail_Comment)
+            mobile.Dumpstate()
+            time.sleep(150)
+            outbug.Stop()
+            break
+        time.sleep(3)
+
+
+def input_text(mobile, text):
+    try:
+        mobile.InputText(text)
+    except Exception:
+        print("[ERROR]  Can't input text")
+
+
+###################################################################################################
+def CloseAll_Home(mobile):
+    print("*********** Close all the running app ***************")
+    print("*********** Go to home screen ***************")
+    mobile.CloseAllApp()
+    time.sleep(2)
+
+
+def Enter_ServicePage(mobile):
+    print('\t[INPUT]  OpenApp("com.samsung.android.oneconnect")')
+    mobile.OpenApp("com.samsung.android.oneconnect")
+
+    time.sleep(3)
+
+    print("\t[INPUT]  'Life' Icon")
+    USER_GetTextXY1STandTouch(mobile=mobile, text="Life")
+
+    time.sleep(3)
+
+
+def Enter_Service_Detail(mobile, service_name):
+    print("\t[INPUT] Enter {} service ").format(service_name)
+    USER_GetTextXY1STandTouch(mobile, service_name)
+    time.sleep(3)
+
+
+def Check_service_exist(mobile, service_name):
+    # Check service is exist
+
+    cnt = 0
+    time_swipe = 3
+    while USER_CompareText1ST(mobile, service_name) == False:
+        mobile.Swipe(783, 1965, 768, 1431)
+        time.sleep(3)
+        cnt += 1
+        if cnt > time_swipe:
+            return False
+
+    return True
+
+
+def Delete_ServiceCard(mobile, service_name):
+    print("[DELETE SERVICE] - Begin delete {}").format(service_name)
+
+    mobile.Swipe(657, 1695, 684, 1443)
+
+    isServiceExist = Check_service_exist(mobile, service_name)
+
+    print("\t[CONFIRM] isServiceExist: {}").format(isServiceExist)
+
+    if isServiceExist == True:
+        print("\t[INPUT] {} Icon ").format(service_name)
+
+        USER_GetTextXY1STandLongTouch(mobile, service_name, 3)
+        time.sleep(3)
+
+        print("\t[INPUT] Delete Icon ")
+        USER_GetTextXY1STandTouch(mobile, "Delete")
+        time.sleep(3)
+
+        print("\t[CONFIRM] - Delete {} service? Cancel ? Delete").format(service_name)
+        USER_GetTextXY1STandTouch(mobile, "Delete")
+        time.sleep(3)
+
+        print("\t[CHECK] - Delete {} service successful").format(service_name)
+        max_time = 5
+        cnt = 1
+        while USER_CompareText1ST(mobile, service_name) == True:
+            if cnt > max_time:
+                print("\t[FAIL] - Delete {} service failed by timeout ").format(service_name)
+                outbug.Stop()
+                break
+            time.sleep(3)
+            cnt += 1
+
+        outbug.Pass()
+        print("\t[PASS]  Delete {} Service").format(service_name)
+
+    else:
+        outbug.Fail()
+        print("\t[FAIL]  {} service not exits!").format(service_name)
+
+
+def Install_service(mobile, service_name):
+    print("[INSTALL SERVICE] - Begin install {}").format(service_name)
+
+    ## Go to the add service
+    mobile.TouchObject({'resource-id': 'com.samsung.android.oneconnect:id/add_menu_button'})
+    time.sleep(3)
+
+    isServiceExist = Check_service_exist(mobile, service_name)
+    print("\t[CONFIRM] isServiceExist: {}").format(isServiceExist)
+
+    ## Installing process
+    if isServiceExist == True:
+        print("[INSTALLING ..... ] - {}").format(service_name)
+        mobile.TouchObject({'resource-id': 'com.samsung.android.oneconnect:id/cardTitle', 'text': service_name})
+        cnt = 0
+        max_time = 10
+        while USER_CompareText1ST(mobile, "Installing…") == True:
+            if cnt > max_time:
+                print("\t[FAIL] - Install {} service failed by timeout ").format(service_name)
+                outbug.Stop()
+                break
+            time.sleep(3)
+            cnt += 1
+
+        time.sleep(10)
+        if service_name == 'Energy':
+            print("\t[CHECK] User Guide page")
+            USER_CompareText1STandWait(mobile=mobile, Text="Next", Max_Seconds=60,
+                                       Fail_Comment="[FAIL ]  Timeout at User Guide page")
+
+            USER_GetTextXY1STandTouch(mobile, "Next")
+
+        elif service_name == 'Air Care' or service_name == 'Pet Care':
+            print("\t[CHECK] User Guide page")
+            USER_CompareText1STandWait(mobile=mobile, Text="Start", Max_Seconds=60,
+                                       Fail_Comment="[FAIL ]  Timeout at User Guide page")
+
+            USER_GetTextXY1STandTouch(mobile, "Start")
+
+        else:
+            pass
+
+        ## Check install successful
+        CloseAll_Home(mobile)
+        Enter_ServicePage(mobile)
+
+        time.sleep(3)
+
+        isServiceExist = Check_service_exist(mobile, service_name)
+        print("\t[CONFIRM] isServiceExist: {}").format(isServiceExist)
+
+        if isServiceExist == True:
+            mobile.TouchObject({'resource-id': 'com.samsung.android.oneconnect:id/containerName', 'text': service_name})
+            if service_name == 'Clothing Care':
+                USER_CompareText1STandWait(mobile=mobile, Text='Start', Max_Seconds=60, Fail_Comment="[FAIL ]  Timeout")
+                time.sleep(2)
+                USER_GetTextXY1STandTouch(mobile, 'Start')
+                USER_CompareText1STandWait(mobile=mobile, Text=service_name, Max_Seconds=60,
+                                           Fail_Comment="[FAIL ]  Timeout")
+            elif service_name == 'Home Care':
+                USER_CompareText1STandWait(mobile=mobile, Text='How to use', Max_Seconds=60,
+                                           Fail_Comment="[FAIL ]  Timeout")
+                time.sleep(2)
+                USER_GetTextXY1STandTouch(mobile, 'Navigate up , Button')
+                USER_CompareText1STandWait(mobile=mobile, Text=service_name, Max_Seconds=60,
+                                           Fail_Comment="[FAIL ]  Timeout")
+            elif service_name == 'Energy':
+                USER_CompareText1STandWait(mobile=mobile, Text='Smart Energy', Max_Seconds=60,
+                                           Fail_Comment="[FAIL ]  Timeout")
+            elif service_name == 'Pet Care':
+                USER_CompareText1STandWait(mobile=mobile, Text='PetCare Service Plugin', Max_Seconds=60,
+                                           Fail_Comment="[FAIL ]  Timeout")
+            else:
+                time.sleep(5)
+                USER_CompareText1STandWait(mobile=mobile, Text=service_name, Max_Seconds=60,
+                                           Fail_Comment="[FAIL ]  Timeout")
+
+            outbug.Pass()
+            print("\t[PASS]  Install {} Service").format(service_name)
+        else:
+
+            print("\t[FAIL]  Install {} Service").format(service_name)
+            outbug.Fail()
+
+    else:
+        print("[FAIL] - {} is not exist!").format(service_name)
+        outbug.Fail()
+
+
+def Init_service(mobile, service_name):
+    CloseAll_Home(mobile)
+
+    Enter_ServicePage(mobile)
+
+    isServiceExist = Check_service_exist(mobile, service_name)
+    if isServiceExist == True:
+        Enter_Service_Detail(mobile, service_name)
+        outbug.Pass()
+    else:
+        outbug.Fail()
+        print("\t[FAIL] {} Service is not exist").format(service_name)

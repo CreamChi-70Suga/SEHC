@@ -1,9 +1,7 @@
-# -- coding: utf-8 --
 import time
 from datetime import datetime
-from elements import *
-from library import *
 from common import *
+from library import *
 
 
 class UserAPIAppView(Common):
@@ -31,8 +29,6 @@ class UserAPIAppView(Common):
                 attribute.update({'resource-id': value})
             elif key == "content-desc":
                 attribute.update({'content-desc': value})
-            elif key == "class_attr":
-                attribute.update({'class': value})
             else:
                 attribute.update({key: value})  # update element
 
@@ -84,7 +80,25 @@ class UserAPIAppView(Common):
         else:
             self.print_log("[user_get_bounds] Couldn't find the element.")
             self.Stop(ERROR_NOTIF)
-
+    # =============================================
+    # Description - Get bounds corresponding to attribute values
+    # # Parameter -	attribute (index, resource-id,..)
+    # #             ex)user_get_pointcenter(resource="com.sec.android.app.launcher:id/home_icon")
+    # # return	  - point-center(x,y)(list)
+    # =============================================
+    def user_get_pointcenter(self, **kwargs):
+        attributes = self.user_get_object(**kwargs)
+        # create a list of point center has the same attribute value
+        if attributes:
+            list_pointcenter = []
+            for x in attributes:
+                pointcenter = x['point-center']
+                list_pointcenter.append(pointcenter)
+            self.print_log("[user_get_pointcenter] list_pointcenter: %s " % list_pointcenter)
+            return list_pointcenter
+        else:
+            self.print_log("[user_get_pointcenter] Couldn't find the element.")
+            self.Stop(ERROR_NOTIF)
     # =============================================
     # Description - Get coordinates(X,Y) corresponding to attribute values
     # # Parameter -	attribute (index, resource-id,..)
@@ -119,7 +133,7 @@ class UserAPIAppView(Common):
             else:
                 attribute.update({key: value})  # update element
         try:
-            self.mobile.TouchObject(attribute, random=False, regex=False)
+            self.mobile.TouchObject(attribute, random = False, regex = False)
         except Exception:
             self.print_log("[user_touch_object] Couldn't touch the element.")
             self.Stop(ERROR_NOTIF)
@@ -175,9 +189,10 @@ class UserAPIAppView(Common):
             result = self.mobile.HasTextAND(txt)
             if result:
                 self.print_log("[user_text_exits] Found text '%s'." % txt)
+                return True
             else:
                 self.print_log("[user_text_exits] Text '%s' is not exist." % txt)
-            return result
+                return False
         except Exception:
             self.print_log("[user_text_exits] Wrong format." % txt)
             self.Stop(ERROR_NOTIF)
@@ -197,26 +212,63 @@ class UserAPIAppView(Common):
                 self.print_log("[user_wait_text_occur] TIME OUT: '%s'" % txt)
                 return False
         return True
+    # =============================================
+    # Description - Swipe up and down until text is found
+    # # Parameter - txt
+    # #             ex)user_swipe_to_find_text('12345')
+    # # return	  - True/False
+    # =============================================
+    def user_swipe_to_find_text(self, txt):
+        for roll in range(2):
+            for swipe in range(6):
+                txt_object = self.user_get_object(text=txt)
+                if not txt_object and roll == 0:
+                    self.user_swipe_up()
+                elif not txt_object and roll == 1:
+                    self.user_swipe_down()
+                else:
+                    self.print_log("[user_swipe_to_find_text] Found text '%s'." % txt)
+                    return True
 
     # =============================================
-    # Description: Go to "Devices" tab, find device's plugin name and enter device plugin
-    # Parameter: X
-    # return - None
+    # Description - Swipe up on current page
+    # # Parameter -	X
+    # # return	  - None
     # =============================================
-    def enter_device_plugin(self, plugin_name):
-        try:
-            print("*************** Close all the running app ****************")
-            print("******************* Go to home screen ********************")
-            self.mobile.CloseAllApp()
-            time.sleep(3)
+    def user_swipe_up(self):
+        self.mobile.Swipe(swipe_up_bound[0], swipe_up_bound[1], swipe_up_bound[2], swipe_up_bound[3], swipe_up_bound[4])
+        self.print_log("[swipe_up] Swipe up")
 
-            self.mobile.OpenApp('com.samsung.android.oneconnect')
-            time.sleep(2)
+    # =============================================
+    # Description - Swipe down on current page
+    # # Parameter -	X
+    # # return	  - None
+    # =============================================
+    def user_swipe_down(self):
+        self.mobile.Swipe(swipe_down_bound[0], swipe_down_bound[1], swipe_down_bound[2], swipe_down_bound[3], swipe_down_bound[4])
+        self.print_log("[swipe_down] Swipe down")
 
-            self.mobile.user_touch({'text': 'Devices', 'order': 0})
-            time.sleep(3)
 
-            self.mobile.user_touch({'text': plugin_name, 'order': 0})
-            time.sleep(3)
-        except Exception:
-            print("[ERROR] Couldn't Enter device plugin")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

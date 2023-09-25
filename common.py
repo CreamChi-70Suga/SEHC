@@ -10,6 +10,7 @@ import datetime
 import os
 import sys
 import subprocess
+from operator import xor
 
 
 class Common:
@@ -158,7 +159,6 @@ class BaseDevice:
         len_args = len(args)
         timeout = args[len_args-1] if "timeout" in args else 5
         len_args = len(args) - 2 if "timeout" in args else len_args
-        print(timeout, len_args)
 
         if len_args % 2 == 0:
             for retry in range(0, 10):
@@ -183,79 +183,68 @@ class BaseDevice:
             Common.print_log("[compare_value][Error] Check args again!")
             return False
 
-        # =============================================
-        # Description - Update the latest values of multiple elements at once
-        # Parameter - *args: Element list
-        # return-X
-        # =============================================
-    def update(self, *args):
-        update_list = []
-
-        for i in range(0, len(args)):
-            if args[i] in VIRTUAL_ELEMENT_TABLE:  # Element is a virtual element
-                if VIRTUAL_ELEMENT_TABLE[args[i]] not in update_list:  # update If it is not added to the list
-                    update_list.append(VIRTUAL_ELEMENT_TABLE[
-                                           args[i]])  # update Adding real elements of virtual elements to the list
-                    continue
-            else:
-                update_list.append(args[i])
-            update_list.append(0x00)
-
-        self._aircon.SetValues(update_list, self._sender_address, self._address, self._str_cmd, self._get_cmd)
-        time.sleep(1)
+    # =============================================
+    # Description	-   send data to SET
+    # Parameter		-	data
+    #               ex) send_raw_data("32F1000801018204301841001634")
+    # return		-	none
+    # =============================================
+    def send_raw_data(self, data):
+        self._aircon.SendRawData(data)
 
     # =============================================
-    # Description 	- Wait until the value of the corresponding element reaches the target
-    # Parameter 	- *args: (Element, Value, Element, Value..., Timeout)
-    # 				ex) wait_value("Room Temperature", 24, "Eva In", 10, 60 * 3)
-    # return 		- arrival time
+    # Description	-   calculate check sum string data by xor operation
+    # Parameter		-	data
+    #               ex) check_sum_by_xor_operation("32F1000801018204301841001634")
+    # return		-	2 end numbers of hexa
     # =============================================
-    def wait_value(self, *args):
-        args = list(args)
-        args_len = len(args)
+    @staticmethod
+    def check_sum_by_xor_operation(data):
+        arr = []
+        for i in range(0, len(data), 2):
+            temp = "0x" + data[i] + data[i+1]
+            integer_value = int(temp, 16)
+            arr.append(integer_value)
 
-        if args_len % 2 == 0:
-            Common.Stop("[wait_value] Timeout value passed incorrectly")
-            return
+        check_sum_xor = 0
+        for x in arr:
+            check_sum_xor = xor(check_sum_xor, x)
 
-        timeout = args[args_len - 1]
-        data_len = args_len - 2
-        del args[-1]
+        hex_check_sum = hex(check_sum_xor).replace("0x", "")
+        if len(hex_check_sum) == 1:
+            hex_check_sum = "0" + hex_check_sum
 
-        success_list = []
-        fail_dict = {}
-        update_list = args[::2]
+        return hex_check_sum
 
-        elapsed_time = 0
-        start_time = int(time.time())
+    # =============================================
+    # Description	-   inverse number
+    # Parameter		-	data1, data2, data3, data4, data5
+    #               ex) reversed_data("28", "08", "03", "81", "14")
+    # return		-	inverse number
+    # =============================================
+    @staticmethod
+    def reversed_data(data1, data2, data3, data4, data5):
 
-        while elapsed_time <= timeout:
-            elapsed_time = int(time.time()) - start_time
+        sd1 = str(data1)[::-1].zfill(2)
+        sd2 = str(data2)[::-1].zfill(2)
+        sd3 = str(data3)[::-1].zfill(2)
+        sd4 = str(data4)[::-1].zfill(2)
+        sd5 = str(data5)[::-1].zfill(2)
+        ret = sd1 + sd2 + sd3 + sd4 + sd5
+        # Common.print_log("%s" % ret)
+        return ret
 
-            self.update(*update_list)
-
-            for i in range(0, data_len, 2):
-                element = args[i]
-                target = args[i + 1]
-
-                if element not in success_list:
-                    current = self.get(element, send=False)
-
-                    if current == target:
-                        Common.print_log(
-                            "[wait_value] PASS, %s Target:[%s] / Current:[%s]" % (element, target, current))
-                        success_list.append(element)
-                        update_list.remove(element)
-                    else:
-                        fail_dict[element] = (target, current)
-
-                    if len(update_list) == 0:
-                        Common.print_log("[wait_value] Total PASS, time taken %d seconds" % elapsed_time)
-                        return elapsed_time
-
-        for k in fail_dict:
-            if k not in success_list:
-                Common.print_log(
-                    "[wait_value] FAIL, %s Target:[%s] / Current:[%s]" % (k, fail_dict[k][0], fail_dict[k][1]))
-
-        Common.Stop("[wait_value] Failure to reach element value within time limit", debug=True)
+    # =============================================
+    # Description	-   writing option remocon
+    # Parameter		-	data1, data2, data3, data4, data5
+    #               ex) send_option_data(28, 40, 03, 81, 14)
+    # return		-	None
+    # =============================================
+    def send_option_data(self, data1, data2, data3, data4, data5):
+        opt_sd = self.reversed_data(data1, data2, data3, data4, data5)
+        xor_op = self.check_sum_by_xor_operation("F100080101"+opt_sd)
+        opt_raw = "32F100080101" + opt_sd + "00" + xor_op + "34"
+        Common.print_log("[send_option_data] %s" % opt_raw)
+        self.send_raw_data(opt_raw)
+        Common.wait(5)
+        self.send_raw_data("32EE00DFAA000000000000009B34")

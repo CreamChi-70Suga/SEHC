@@ -5,11 +5,9 @@
 # VER		:
 # =============================================
 
-from common import *
+import common
 from elements import *
 from library import *
-from output import *
-from input import *
 
 rpm_dict = {
     PET_MODE: {
@@ -56,12 +54,12 @@ rpm_dict = {
                          "MID": 1140},
                 "MID": {"TOP": 950,
                         "MID": 850},
-                "LOW": {"TOP": 640,
-                        "MID": 500},
-                "WINDFREE": {"TOP": None,
-                             "MID": None},
-                "SLEEP": {"TOP": None,
-                          "MID": None}},
+                "LOW": {"TOP": 560,
+                        "MID": 420},
+                "WINDFREE": {"TOP": 530,
+                             "MID": 410},
+                "SLEEP": {"TOP": 420,
+                          "MID": 320}},
             "1": None},
         SMALL_SIZE: {
             "0": {
@@ -88,13 +86,133 @@ rpm_dict = {
                           "MID": 0}
             }
         }
-    }
+    },
+    HIGH_MODE: {
+        MEDIUM_SIZE: {
+            "0": {
+                "HIGH": {"TOP": 1240,
+                         "MID": 1140},
+                "MID": {"TOP": None,
+                        "MID": None},
+                "LOW": {"TOP": None,
+                        "MID": None},
+                "WINDFREE": {"TOP": None,
+                             "MID": None},
+                "SLEEP": {"TOP": None,
+                          "MID": None}},
+            "1": None},
+        SMALL_SIZE: {
+            "0": {
+                "HIGH": {"TOP": 1240,
+                         "MID": 0},
+                "MID": {"TOP": None,
+                        "MID": None},
+                "LOW": {"TOP": None,
+                        "MID": None},
+                "WINDFREE": {"TOP": None,
+                             "MID": None},
+                "SLEEP": {"TOP": None,
+                          "MID": None}},
+            "1": {
+                "HIGH": {"TOP": 1290,
+                         "MID": 0},
+                "MID": {"TOP": None,
+                        "MID": None},
+                "LOW": {"TOP": None,
+                        "MID": None},
+                "WINDFREE": {"TOP": None,
+                             "MID": None},
+                "SLEEP": {"TOP": None,
+                          "MID": None}
+            }
+        }
+    },
+    WIND_FREE_MODE: {
+        MEDIUM_SIZE: {
+            "0": {
+                "HIGH": {"TOP": None,
+                         "MID": None},
+                "MID": {"TOP": None,
+                        "MID": None},
+                "LOW": {"TOP": None,
+                        "MID": None},
+                "WINDFREE": {"TOP": 530,
+                             "MID": 410},
+                "SLEEP": {"TOP": None,
+                          "MID": None}},
+            "1": None},
+        SMALL_SIZE: {
+            "0": {
+                "HIGH": {"TOP": None,
+                         "MID": None},
+                "MID": {"TOP": None,
+                        "MID": None},
+                "LOW": {"TOP": None,
+                        "MID": None},
+                "WINDFREE": {"TOP": 480,
+                             "MID": 0},
+                "SLEEP": {"TOP": None,
+                          "MID": None}},
+            "1": {
+                "HIGH": {"TOP": None,
+                         "MID": None},
+                "MID": {"TOP": None,
+                        "MID": None},
+                "LOW": {"TOP": None,
+                        "MID": None},
+                "WINDFREE": {"TOP": 480,
+                             "MID": 0},
+                "SLEEP": {"TOP": None,
+                          "MID": None}
+            }
+        }
+    },
+    SLEEP_MODE: {
+        MEDIUM_SIZE: {
+            "0": {
+                "HIGH": {"TOP": None,
+                         "MID": None},
+                "MID": {"TOP": None,
+                        "MID": None},
+                "LOW": {"TOP": None,
+                        "MID": None},
+                "WINDFREE": {"TOP": None,
+                             "MID": None},
+                "SLEEP": {"TOP": 420,
+                          "MID": 320}},
+            "1": None},
+        SMALL_SIZE: {
+            "0": {
+                "HIGH": {"TOP": None,
+                         "MID": None},
+                "MID": {"TOP": None,
+                        "MID": None},
+                "LOW": {"TOP": None,
+                        "MID": None},
+                "WINDFREE": {"TOP": None,
+                             "MID": None},
+                "SLEEP": {"TOP": 400,
+                          "MID": 0}},
+            "1": {
+                "HIGH": {"TOP": None,
+                         "MID": None},
+                "MID": {"TOP": None,
+                        "MID": None},
+                "LOW": {"TOP": None,
+                        "MID": None},
+                "WINDFREE": {"TOP": None,
+                             "MID": None},
+                "SLEEP": {"TOP": 400,
+                          "MID": 0}
+            }
+        }}
 }
 
 
 class FanRpm:
 
     def __init__(self):
+
         self.rpm_sleep_mid = None
         self.rpm_sleep_top = None
         self.rpm_windfree_mid = None
@@ -113,6 +231,7 @@ class FanRpm:
     # return - None
     # =============================================
     def get_rpm_from_table(self, mode, platform, rpm_option):
+
         self.rpm_high_top = rpm_dict[mode][platform][rpm_option]["HIGH"]["TOP"]
         self.rpm_high_mid = rpm_dict[mode][platform][rpm_option]["HIGH"]["MID"]
 
@@ -127,7 +246,7 @@ class FanRpm:
 
         self.rpm_sleep_top = rpm_dict[mode][platform][rpm_option]["SLEEP"]["TOP"]
         self.rpm_sleep_mid = rpm_dict[mode][platform][rpm_option]["SLEEP"]["MID"]
-
+        
         print("\t  [get_rpm_from_table]:")
         print("\t  rpm_high_top: %s, rpm_high_mid: %s" % (self.rpm_high_top, self.rpm_high_mid))
         print("\t  rpm_mid_top: %s, rpm_mid_mid: %s" % (self.rpm_mid_top, self.rpm_mid_mid))
